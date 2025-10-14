@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Task Planner Bot</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="app-title">
+                        <i class="fas fa-robot"></i>
+                        Personal Task Planner Bot
+                    </h1>
+                    <p class="current-date" id="currentDate"></p>
+                </div>
+                <div class="header-right">
+                    <!-- Location Info -->
+                    <div class="location-info" id="locationInfo">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="location-text">Detecting location...</span>
+                    </div>
+                    <!-- Weather Widget -->
+                    <div class="weather-widget">
+                        <div class="weather-icon" id="weatherIcon">⛅</div>
+                        <div class="weather-info">
+                            <span class="weather-temp" id="weatherTemp">24°C</span>
+                            <span class="weather-condition" id="weatherCondition">Partly Cloudy</span>
+                        </div>
+                    </div>
+                    <!-- Theme Toggle -->
+                    <div class="theme-toggle">
+                        <button class="btn btn--secondary" id="themeToggleBtn" title="Toggle theme">
+                            <i class="fas fa-moon"></i>
+                            <span id="themeToggleText">Dark Mode</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Quote Section -->
+        <div class="quote-section">
+            <div class="quote-content">
+                <i class="fas fa-quote-left quote-icon"></i>
+                <p class="quote-text" id="quoteText">"The way to get started is to quit talking and begin doing."</p>
+                <p class="quote-author" id="quoteAuthor">— Walt Disney</p>
+            </div>
+            <button class="refresh-quote-btn" id="refreshQuoteBtn">
+                <i class="fas fa-refresh"></i>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Column - Tasks -->
+            <div class="left-column">
+                <div class="tasks-section">
+                    <div class="section-header">
+                        <h2 class="section-title" id="sectionTitle">Today's Tasks</h2>
+                        <button class="toggle-view-btn" id="toggleViewBtn">View Tomorrow's Plan</button>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-text" id="progressText">0% Complete</span>
+                    </div>
+
+                    <!-- Tasks List -->
+                    <div class="tasks-list" id="tasksList">
+                        <!-- Tasks will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Analytics Visualization Panel -->
+                <div class="analytics-panel" id="analyticsPanel" style="display: none;">
+                    <div class="section-header">
+                        <h2 class="section-title">Productivity Insights</h2>
+                        <button class="btn btn--secondary" id="closeAnalyticsBtn" style="margin-left: auto;">Close</button>
+                    </div>
+                    <div class="analytics-content">
+                        <div class="chart-container">
+                            <canvas id="completionChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="priorityChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification Settings Panel -->
+                <div class="notification-settings">
+                    <div class="section-header">
+                        <h2 class="section-title">Notification Settings</h2>
+                    </div>
+                    <div class="settings-content">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>Enable Notifications</h3>
+                                <p>Allow the app to send you reminders and alerts</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="notificationsToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>Task Reminders</h3>
+                                <p>Get notified 30 minutes before tasks are due</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="taskRemindersToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>Weather Alerts</h3>
+                                <p>Receive alerts about weather that might affect your plans</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="weatherAlertsToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h3>Location-based Alerts</h3>
+                                <p>Get notifications based on your current location</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="locationAlertsToggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <button class="btn btn--secondary" id="testNotificationBtn">
+                            <i class="fas fa-bell"></i>
+                            Send Test Notification
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Chatbot -->
+            <div class="right-column">
+                <div class="chat-section">
+                    <div class="chat-header">
+                        <h3>AI Assistant</h3>
+                        <div class="chat-status">
+                            <div class="status-indicator online"></div>
+                            <span>Online</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <input type="text" 
+                               class="form-control chat-input" 
+                               id="chatInput" 
+                               placeholder="Type a command like 'Add meeting with client at 2pm', 'Show my productivity report', or 'Add task that depends on Prepare presentation slides'"
+                               maxlength="200">
+                        <button class="btn btn--primary send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="action-buttons-container" style="margin-top: var(--space-12); display: flex; gap: var(--space-8);">
+                        <button class="btn btn--secondary" id="analyticsBtn" style="flex: 1;">
+                            <i class="fas fa-chart-bar"></i>
+                            Report
+                        </button>
+                        <button class="btn btn--secondary" id="notionBtn" style="flex: 1;">
+                            <i class="fas fa-cloud"></i>
+                            Import Notion Tasks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
