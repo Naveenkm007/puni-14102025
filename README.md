@@ -55,14 +55,21 @@ To use the Google Calendar integration features:
    pip install -r requirements.txt
    ```
 
-2. Set up your environment variables:
+2. Set up your environment variables by copying `.env.example` to `.env` and filling in your values:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Then edit the `.env` file with your actual credentials:
    - `NOTION_TOKEN` - Your Notion integration token
+   - `NOTION_DATABASE_ID` - Your Notion database ID
    - `WEATHER_API_KEY` - Your OpenWeatherMap API key (optional)
+   - `GOOGLE_CALENDAR_CREDENTIALS_PATH` - Path to your Google Calendar credentials file (defaults to `credentials.json`)
 
 3. For Google Calendar integration:
-   - Set up Google Calendar API credentials
+   - Set up Google Calendar API credentials in the Google Cloud Console
    - Download the credentials JSON file
-   - Place it in the application directory as `credentials.json`
+   - Place it in the application directory as `credentials.json` (or specify a different path in your `.env` file)
 
 4. Run the Flask API:
    ```bash

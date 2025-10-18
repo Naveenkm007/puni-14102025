@@ -12,6 +12,9 @@ class Config:
     # Weather API
     WEATHER_API_KEY = os.getenv('WEATHER_API_KEY', '')
     
+    # Google Calendar API
+    GOOGLE_CALENDAR_CREDENTIALS_PATH = os.getenv('GOOGLE_CALENDAR_CREDENTIALS_PATH', 'credentials.json')
+    
     # Flask Settings
     FLASK_HOST = os.getenv('FLASK_HOST', 'localhost')
     FLASK_PORT = int(os.getenv('FLASK_PORT', 5000))

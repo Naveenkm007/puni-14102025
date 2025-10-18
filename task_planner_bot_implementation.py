@@ -1,5 +1,5 @@
 # Personal Task Planner Bot - Core Implementation Structure
-# File: task_planner_agent.py
+# File: task_planner_bot_implementation.py
 
 import os
 import json
@@ -14,6 +14,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.llms import OpenAI
 import requests
 import openai
+from config import Config
 
 # Add Google API client library to requirements
 # We'll need to add this to the imports
@@ -807,7 +808,7 @@ class AgenticPlanner:
         self.notification_service = NotificationService(self.db_manager)
         self.location_service = LocationService()
         self.weather_service = WeatherService(os.getenv('WEATHER_API_KEY', ''))
-        self.calendar = CalendarIntegration('credentials.json')
+        self.calendar = CalendarIntegration(Config.GOOGLE_CALENDAR_CREDENTIALS_PATH)
         self.notion = NotionIntegration(os.getenv('NOTION_TOKEN', ''))
         self.analytics = ProductivityAnalytics()
     
