@@ -245,6 +245,7 @@ function initApp() {
   updateProgress();
   initNotifications(); // Initialize notification system
   setupNotificationSettings(); // Setup notification settings UI
+  initTheme(); // Initialize theme
   
   // Set up event listeners
   setupEventListeners();
@@ -973,6 +974,11 @@ function setupEventListeners() {
       e.preventDefault();
     }
   });
+  
+  // Theme toggle button
+  if (elements.themeToggleBtn) {
+    elements.themeToggleBtn.addEventListener('click', toggleTheme);
+  }
 }
 
 // Generate simple charts for analytics
