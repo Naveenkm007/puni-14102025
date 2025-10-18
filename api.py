@@ -30,6 +30,15 @@ def import_notion_tasks():
     result = planner.fetch_notion_tasks(database_id, user_id)
     return jsonify({'message': result})
 
+@app.route('/api/calendar/import', methods=['POST'])
+def import_calendar_events():
+    """Import events from Google Calendar as tasks"""
+    data = request.get_json()
+    user_id = data.get('user_id', 'default_user')
+    
+    result = planner.fetch_calendar_events_as_tasks(user_id)
+    return jsonify({'message': result})
+
 @app.route('/api/notion/sync', methods=['POST'])
 def sync_task_to_notion():
     """Sync a task to Notion"""

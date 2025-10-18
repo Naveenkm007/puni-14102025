@@ -15,6 +15,20 @@ from langchain.llms import OpenAI
 import requests
 import openai
 
+# Add Google API client library to requirements
+# We'll need to add this to the imports
+try:
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import Flow
+    from google.auth.transport.requests import Request
+    from googleapiclient.discovery import build
+    GOOGLE_API_AVAILABLE = True
+except ImportError:
+    Credentials = None
+    build = None
+    GOOGLE_API_AVAILABLE = False
+    print("Google API libraries not available. Google Calendar integration will be limited.")
+
 # Data Models
 @dataclass
 class Task:
@@ -348,21 +362,125 @@ class WeatherService:
         return False
 
 class CalendarIntegration:
-    def __init__(self, credentials_path: str):
-        # Initialize Google Calendar API
-        pass
+    def __init__(self, credentials_path: str = 'credentials.json'):
+        self.credentials_path = credentials_path
+        self.service = None
+        if GOOGLE_API_AVAILABLE:
+            self._initialize_service()
+
+    def _initialize_service(self):
+        """Initialize the Google Calendar API service"""
+        try:
+            # Check if we have valid credentials
+            creds = None
+            if os.path.exists('token.json') and Credentials:
+                creds = Credentials.from_authorized_user_file('token.json')
+            
+            # If there are no (valid) credentials available, let the user log in
+            if not creds or not creds.valid:
+                # In a real implementation, you would handle the OAuth flow
+                # For now, we'll just set up a mock service
+                pass
+            
+            if creds and build:
+                self.service = build('calendar', 'v3', credentials=creds)
+        except Exception as e:
+            print(f"Error initializing Google Calendar service: {e}")
+            self.service = None
 
     def get_events_today(self) -> List[Dict]:
-        # Fetch today's calendar events
-        return []
+        """Fetch today's calendar events"""
+        if not self.service:
+            # Return mock data for demo purposes
+            return [
+                {
+                    'id': 'event1',
+                    'summary': 'Team Meeting',
+                    'start': {'dateTime': '2023-01-01T10:00:00Z'},
+                    'end': {'dateTime': '2023-01-01T11:00:00Z'}
+                },
+                {
+                    'id': 'event2',
+                    'summary': 'Lunch Break',
+                    'start': {'dateTime': '2023-01-01T12:00:00Z'},
+                    'end': {'dateTime': '2023-01-01T13:00:00Z'}
+                }
+            ]
+        
+        try:
+            # Get today's date range
+            now = datetime.utcnow()
+            start_of_day = datetime(now.year, now.month, now.day, 0, 0, 0)
+            end_of_day = datetime(now.year, now.month, now.day, 23, 59, 59)
+            
+            # Format for Google Calendar API
+            time_min = start_of_day.isoformat() + 'Z'
+            time_max = end_of_day.isoformat() + 'Z'
+            
+            # Call the Calendar API
+            events_result = self.service.events().list(
+                calendarId='primary',
+                timeMin=time_min,
+                timeMax=time_max,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            events = events_result.get('items', [])
+            
+            # Convert to our format
+            formatted_events = []
+            for event in events:
+                formatted_events.append({
+                    'id': event['id'],
+                    'summary': event.get('summary', 'Untitled Event'),
+                    'start': event['start'],
+                    'end': event['end'],
+                    'location': event.get('location', ''),
+                    'description': event.get('description', '')
+                })
+            
+            return formatted_events
+        except Exception as e:
+            print(f"Error fetching calendar events: {e}")
+            return []
 
     def create_event(self, task: Task) -> bool:
-        # Create calendar event for task
-        return True
+        """Create a calendar event for a task"""
+        if not self.service:
+            # Simulate successful creation for demo purposes
+            return True
+        
+        try:
+            # Create event object
+            event = {
+                'summary': task.title,
+                'description': task.description,
+                'start': {
+                    'dateTime': datetime.now().isoformat() + 'Z',  # Placeholder time
+                    'timeZone': 'UTC',
+                },
+                'end': {
+                    'dateTime': (datetime.now() + timedelta(minutes=task.estimated_duration)).isoformat() + 'Z',
+                    'timeZone': 'UTC',
+                },
+            }
+            
+            # Insert the event
+            event = self.service.events().insert(calendarId='primary', body=event).execute()
+            return True
+        except Exception as e:
+            print(f"Error creating calendar event: {e}")
+            return False
 
     def get_free_slots(self, duration: int) -> List[tuple]:
-        # Find free time slots for given duration
-        return []
+        """Find free time slots for a given duration"""
+        # For demo purposes, return some mock free slots
+        return [
+            (9, 10),   # 9:00-10:00
+            (14, 15),  # 14:00-15:00
+            (16, 17)   # 16:00-17:00
+        ]
 
 class NotionIntegration:
     def __init__(self, token: Optional[str] = None):
@@ -377,39 +495,178 @@ class NotionIntegration:
         url = f"https://api.notion.com/v1/databases/{database_id}/query"
         try:
             response = requests.post(url, headers=self.headers)
+            response.raise_for_status()  # Raise an exception for bad status codes
             return response.json().get('results', [])
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching tasks from Notion: {e}")
+            return []
         except Exception as e:
+            print(f"Unexpected error: {e}")
             return []
 
     def create_task_in_notion(self, task: Task, database_id: str):
         url = "https://api.notion.com/v1/pages"
+        
+        # Prepare properties based on common Notion task database structures
+        properties: Dict[str, Dict] = {
+            "Name": {"title": [{"text": {"content": task.title}}]},
+        }
+        
+        # Add priority if it's a number property
+        if hasattr(task, 'priority'):
+            properties["Priority"] = {"number": task.priority}
+        
+        # Add status if it's a select property
+        if hasattr(task, 'status'):
+            status_name = "To Do"
+            if task.status == "completed":
+                status_name = "Done"
+            elif task.status == "in_progress":
+                status_name = "In Progress"
+            properties["Status"] = {"select": {"name": status_name}}
+        
+        # Add due date if available
+        if task.due_date:
+            properties["Date"] = {
+                "date": {
+                    "start": task.due_date.isoformat()
+                }
+            }
+        
+        # Add tags if available
+        if task.tags:
+            properties["Tags"] = {
+                "multi_select": [{"name": tag} for tag in task.tags]
+            }
+        
         data = {
             "parent": {"database_id": database_id},
-            "properties": {
-                "Name": {"title": [{"text": {"content": task.title}}]},
-                "Priority": {"number": task.priority},
-                "Status": {"select": {"name": task.status}}
-            }
+            "properties": properties
         }
-        requests.post(url, headers=self.headers, json=data)
+        
+        try:
+            response = requests.post(url, headers=self.headers, json=data)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error creating task in Notion: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return None
     
     def update_task_in_notion(self, task: Task, page_id: str):
         """Update a task in Notion"""
         url = f"https://api.notion.com/v1/pages/{page_id}"
+        
         # Map our status to Notion status
         notion_status = "Done" if task.status == "completed" else "To Do"
         if task.status == "in_progress":
             notion_status = "In Progress"
         
-        data = {
-            "properties": {
-                "Name": {"title": [{"text": {"content": task.title}}]},
-                "Priority": {"number": task.priority},
-                "Status": {"select": {"name": notion_status}}
-            }
+        # Prepare properties to update
+        properties: Dict[str, Dict] = {
+            "Name": {"title": [{"text": {"content": task.title}}]},
         }
-        response = requests.patch(url, headers=self.headers, json=data)
-        return response.status_code == 200
+        
+        # Add priority if it's a number property
+        if hasattr(task, 'priority'):
+            properties["Priority"] = {"number": task.priority}
+        
+        # Add status if it's a select property
+        properties["Status"] = {"select": {"name": notion_status}}
+        
+        # Add due date if available
+        if task.due_date:
+            properties["Date"] = {
+                "date": {
+                    "start": task.due_date.isoformat()
+                }
+            }
+        
+        # Add tags if available
+        if task.tags:
+            properties["Tags"] = {
+                "multi_select": [{"name": tag} for tag in task.tags]
+            }
+        
+        data = {
+            "properties": properties
+        }
+        
+        try:
+            response = requests.patch(url, headers=self.headers, json=data)
+            response.raise_for_status()
+            return response.status_code == 200
+        except requests.exceptions.RequestException as e:
+            print(f"Error updating task in Notion: {e}")
+            return False
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return False
+    
+    def parse_notion_task_to_local_task(self, notion_task_data: Dict, database_id: str) -> Task:
+        """Convert a Notion task to our local Task format"""
+        properties = notion_task_data.get('properties', {})
+        
+        # Get task title
+        title = ''
+        if 'Name' in properties:
+            title_data = properties['Name'].get('title', [])
+            if title_data:
+                title = title_data[0].get('text', {}).get('content', '')
+        
+        # Get priority
+        priority = 3  # Default medium priority
+        if 'Priority' in properties:
+            priority = properties['Priority'].get('number', 3)
+        
+        # Get status
+        status = 'pending'
+        if 'Status' in properties:
+            status_text = properties['Status'].get('select', {}).get('name', 'pending')
+            # Map Notion status to our status
+            if status_text.lower() in ['done', 'completed']:
+                status = 'completed'
+            elif status_text.lower() in ['in progress', 'in progress']:
+                status = 'in_progress'
+            else:
+                status = 'pending'
+        
+        # Get due date
+        due_date = None
+        if 'Date' in properties:
+            date_info = properties['Date'].get('date', {})
+            if date_info and 'start' in date_info:
+                try:
+                    due_date = datetime.fromisoformat(date_info['start'].replace('Z', '+00:00'))
+                except ValueError:
+                    pass  # Invalid date format
+        
+        # Get tags
+        tags = []
+        if 'Tags' in properties:
+            tags_data = properties['Tags'].get('multi_select', [])
+            tags = [tag.get('name', '') for tag in tags_data if tag.get('name')]
+        
+        # Create task object
+        task = Task(
+            id=f"notion_{notion_task_data.get('id', '')}",
+            title=title,
+            description=f"Imported from Notion database {database_id}",
+            priority=priority,
+            due_date=due_date,
+            estimated_duration=60,  # Default duration, could be parsed from Notion
+            status=status,
+            weather_dependent=False,
+            location_dependent=False,
+            reminder_enabled=True,
+            dependencies=[],  # Would need to parse from Notion relations
+            tags=tags,
+            source='notion'
+        )
+        
+        return task
 
 class TaskPriorizer:
     @staticmethod
@@ -568,50 +825,8 @@ class AgenticPlanner:
             # Convert Notion tasks to our Task format
             notion_tasks = []
             for notion_task_data in notion_tasks_data:
-                # Extract properties from Notion task
-                properties = notion_task_data.get('properties', {})
-                
-                # Get task title
-                title = ''
-                if 'Name' in properties:
-                    title_data = properties['Name'].get('title', [])
-                    if title_data:
-                        title = title_data[0].get('text', {}).get('content', '')
-                
-                # Get priority
-                priority = 3  # Default medium priority
-                if 'Priority' in properties:
-                    priority = properties['Priority'].get('number', 3)
-                
-                # Get status
-                status = 'pending'
-                if 'Status' in properties:
-                    status_text = properties['Status'].get('select', {}).get('name', 'pending')
-                    # Map Notion status to our status
-                    if status_text.lower() in ['done', 'completed']:
-                        status = 'completed'
-                    elif status_text.lower() in ['in progress', 'in progress']:
-                        status = 'in_progress'
-                    else:
-                        status = 'pending'
-                
-                # Create task object
-                task = Task(
-                    id=f"notion_{notion_task_data.get('id', '')}",
-                    title=title,
-                    description=f"Imported from Notion database {database_id}",
-                    priority=priority,
-                    due_date=None,  # Would need to parse from Notion date property
-                    estimated_duration=60,  # Default duration
-                    status=status,
-                    weather_dependent=False,
-                    location_dependent=False,
-                    reminder_enabled=True,
-                    dependencies=[],
-                    tags=['notion'],
-                    source='notion'
-                )
-                
+                # Parse Notion task to local task format
+                task = self.notion.parse_notion_task_to_local_task(notion_task_data, database_id)
                 notion_tasks.append(task)
                 
                 # Save to database
@@ -621,6 +836,55 @@ class AgenticPlanner:
             
         except Exception as e:
             return f"Error importing tasks from Notion: {str(e)}"
+    
+    def fetch_calendar_events_as_tasks(self, user_id: str = "default_user") -> str:
+        """Fetch calendar events and convert them to tasks"""
+        try:
+            # Get events from calendar
+            calendar_events = self.calendar.get_events_today()
+            
+            # Convert calendar events to tasks
+            calendar_tasks = []
+            for event in calendar_events:
+                # Create task from event
+                start_time = event.get('start', {}).get('dateTime')
+                end_time = event.get('end', {}).get('dateTime')
+                
+                # Calculate duration if both times are available
+                estimated_duration = 60  # Default duration
+                if start_time and end_time:
+                    try:
+                        start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                        end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                        estimated_duration = int((end_dt - start_dt).total_seconds() / 60)
+                    except ValueError:
+                        pass  # Use default duration if parsing fails
+                
+                task = Task(
+                    id=f"calendar_{event.get('id', '')}",
+                    title=event.get('summary', 'Calendar Event'),
+                    description=event.get('description', f"Calendar event: {event.get('summary', 'Untitled Event')}"),
+                    priority=2,  # Low priority for calendar events
+                    due_date=None,  # Would need to parse from event date
+                    estimated_duration=estimated_duration,
+                    status='pending',
+                    weather_dependent=False,
+                    location_dependent=False,
+                    reminder_enabled=True,
+                    dependencies=[],
+                    tags=['calendar'],
+                    source='calendar'
+                )
+                
+                calendar_tasks.append(task)
+                
+                # Save to database
+                self.db_manager.save_task(task)
+            
+            return f"Successfully imported {len(calendar_tasks)} events from calendar as tasks"
+            
+        except Exception as e:
+            return f"Error importing calendar events: {str(e)}"
     
     def sync_task_to_notion(self, task: Task, database_id: str) -> str:
         """Sync a task's completion status back to Notion"""

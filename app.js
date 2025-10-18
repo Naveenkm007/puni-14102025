@@ -191,6 +191,10 @@ const appData = {
     connected: false,
     tasks: [],
     databaseId: ''
+  },
+  calendar: {
+    connected: false,
+    tasks: []
   }
 };
 
@@ -222,6 +226,9 @@ const elements = {
   weatherAlertsToggle: document.getElementById('weatherAlertsToggle'),
   locationAlertsToggle: document.getElementById('locationAlertsToggle'),
   testNotificationBtn: document.getElementById('testNotificationBtn'),
+  // Import buttons
+  importNotionBtn: document.getElementById('importNotionBtn'),
+  importCalendarBtn: document.getElementById('importCalendarBtn'),
   // Theme toggle elements
   themeToggleBtn: document.getElementById('themeToggleBtn'),
   themeToggleText: document.getElementById('themeToggleText')
@@ -421,6 +428,71 @@ function fetchNotionTasks() {
   }, 1500);
 }
 
+// Fetch events from Google Calendar
+function fetchCalendarEvents() {
+  addBotMessage("Connecting to Google Calendar and importing events...");
+  
+  // For demo purposes, we'll simulate fetching calendar events with a delay
+  setTimeout(() => {
+    // Sample calendar events as tasks
+    const calendarTasks = [
+      {
+        id: 'calendar-1',
+        title: 'Calendar Event: Team Meeting',
+        description: 'Weekly team sync meeting',
+        priority: 'High',
+        duration: '60 min',
+        completed: false,
+        weather_dependent: false,
+        dependencies: [],
+        source: 'calendar'
+      },
+      {
+        id: 'calendar-2',
+        title: 'Calendar Event: Client Call',
+        description: 'Quarterly review with key client',
+        priority: 'High',
+        duration: '30 min',
+        completed: false,
+        weather_dependent: false,
+        dependencies: [],
+        source: 'calendar'
+      }
+    ];
+    
+    appData.calendar.tasks = calendarTasks;
+    appData.calendar.connected = true;
+    
+    // Add bot message to notify user
+    addBotMessage(`✅ Successfully imported ${calendarTasks.length} events from Google Calendar!`);
+    
+    // Reload tasks to include calendar tasks
+    loadTasks();
+    
+    // In a real implementation, you would make an API call like this:
+    /*
+    fetch('/api/calendar/import', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: 'default_user'
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      addBotMessage(data.message);
+      // Reload tasks after successful import
+      loadTasks();
+    })
+    .catch(error => {
+      addBotMessage(`❌ Error importing calendar events: ${error.message}`);
+    });
+    */
+  }, 1500);
+}
+
 // Load and display tasks
 function loadTasks() {
   let tasks = currentView === 'today' ? appData.tasks : appData.tomorrowTasks;
@@ -428,6 +500,11 @@ function loadTasks() {
   // Include Notion tasks if connected
   if (appData.notion.connected && currentView === 'today') {
     tasks = [...tasks, ...appData.notion.tasks];
+  }
+  
+  // Include Calendar tasks if connected
+  if (appData.calendar.connected && currentView === 'today') {
+    tasks = [...tasks, ...appData.calendar.tasks];
   }
   
   elements.tasksList.innerHTML = '';
@@ -443,11 +520,11 @@ function loadTasks() {
 // Create task element
 function createTaskElement(task) {
   const taskDiv = document.createElement('div');
-  taskDiv.className = `task-item ${task.completed ? 'completed' : ''} ${task.source === 'notion' ? 'notion-task' : ''}`;
+  taskDiv.className = `task-item ${task.completed ? 'completed' : ''} ${task.source === 'notion' ? 'notion-task' : ''} ${task.source === 'calendar' ? 'calendar-task' : ''}`;
   taskDiv.dataset.taskId = task.id;
   
   // Check if task has unmet dependencies
-  const allTasks = [...appData.tasks, ...appData.tomorrowTasks, ...appData.notion.tasks];
+  const allTasks = [...appData.tasks, ...appData.tomorrowTasks, ...appData.notion.tasks, ...appData.calendar.tasks];
   const hasUnmetDependencies = task.dependencies && task.dependencies.length > 0 && 
     !task.dependencies.every(depId => {
       const depTask = allTasks.find(t => t.id === depId);
@@ -457,8 +534,13 @@ function createTaskElement(task) {
   // Add lock icon if task has unmet dependencies
   const lockIcon = hasUnmetDependencies ? '<i class="fas fa-lock dependency-lock" title="Task has unmet dependencies"></i>' : '';
   
-  // Add Notion icon if it's a Notion task
-  const notionIcon = task.source === 'notion' ? '<i class="fas fa-cloud" title="Imported from Notion"></i>' : '';
+  // Add source icon based on task source
+  let sourceIcon = '';
+  if (task.source === 'notion') {
+    sourceIcon = '<i class="fas fa-cloud" title="Imported from Notion"></i>';
+  } else if (task.source === 'calendar') {
+    sourceIcon = '<i class="fas fa-calendar" title="Imported from Google Calendar"></i>';
+  }
   
   taskDiv.innerHTML = `
     <div class="task-checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${task.id})">
@@ -466,7 +548,7 @@ function createTaskElement(task) {
     </div>
     <div class="task-content">
       <div class="task-header">
-        <h4 class="task-title">${task.title} ${lockIcon} ${notionIcon}</h4>
+        <h4 class="task-title">${task.title} ${lockIcon} ${sourceIcon}</h4>
         <span class="task-priority ${task.priority.toLowerCase()}">${task.priority}</span>
       </div>
       <p class="task-description">${task.description}</p>
@@ -478,6 +560,7 @@ function createTaskElement(task) {
         ${task.weather_dependent ? '<i class="fas fa-cloud-rain weather-dependent" title="Weather dependent"></i>' : ''}
         ${task.dependencies && task.dependencies.length > 0 ? `<span class="task-dependencies" title="${task.dependencies.length} dependencies"><i class="fas fa-link"></i> ${task.dependencies.length}</span>` : ''}
         ${task.source === 'notion' ? `<span class="task-source" title="Imported from Notion"><i class="fas fa-cloud"></i></span>` : ''}
+        ${task.source === 'calendar' ? `<span class="task-source" title="Imported from Google Calendar"><i class="fas fa-calendar"></i></span>` : ''}
       </div>
     </div>
   `;
@@ -507,9 +590,15 @@ function toggleTask(taskId) {
     if (task) taskCollection = appData.notion.tasks;
   }
   
+  // Check in Calendar tasks
+  if (!task) {
+    task = appData.calendar.tasks.find(t => t.id === taskId);
+    if (task) taskCollection = appData.calendar.tasks;
+  }
+  
   if (task && taskCollection) {
     // Check if task has unmet dependencies
-    const allTasks = [...appData.tasks, ...appData.tomorrowTasks, ...appData.notion.tasks];
+    const allTasks = [...appData.tasks, ...appData.tomorrowTasks, ...appData.notion.tasks, ...appData.calendar.tasks];
     const hasUnmetDependencies = task.dependencies && task.dependencies.length > 0 && 
       !task.dependencies.every(depId => {
         const depTask = allTasks.find(t => t.id === depId);
@@ -678,14 +767,14 @@ function processChatInput(input) {
       return "I can help you add a task with dependencies! In the full version, I would parse the dependency relationship and link tasks accordingly. For example, you could say 'Add task Update project documentation that depends on Client presentation'.";
     }
     return "I'd be happy to help you add a new task! However, in this demo version, task management is simulated. In the full version, I would integrate with your calendar and task management systems to add this automatically.";
-  } else if (lowerInput.includes('notion') || lowerInput.includes('import')) {
-    if (lowerInput.includes('connect') || lowerInput.includes('setup')) {
-      return "To connect your Notion account, you would need to provide your Notion integration token and database ID. In the full version, I would securely store these credentials and sync your tasks between Notion and this application.";
-    } else {
-      // Trigger Notion import
-      fetchNotionTasks();
-      return "I'm importing your tasks from Notion now. This may take a moment...";
-    }
+  } else if (lowerInput.includes('notion') && (lowerInput.includes('import') || lowerInput.includes('fetch'))) {
+    fetchNotionTasks();
+    return "I'm importing tasks from your Notion database now. This may take a moment...";
+  } else if (lowerInput.includes('calendar') && (lowerInput.includes('import') || lowerInput.includes('fetch'))) {
+    fetchCalendarEvents();
+    return "I'm importing events from your Google Calendar now. This may take a moment...";
+  } else if (lowerInput.includes('import') && (lowerInput.includes('task') || lowerInput.includes('event'))) {
+    return "Would you like to import tasks from Notion or events from Google Calendar? Please specify which service you'd like to import from.";
   } else if (lowerInput.includes('priority') || lowerInput.includes('important')) {
     const highPriorityTasks = appData.tasks.filter(task => task.priority === 'High' && !task.completed);
     if (highPriorityTasks.length > 0) {
@@ -861,52 +950,14 @@ function setupEventListeners() {
   // Send message button
   elements.sendBtn.addEventListener('click', sendMessage);
   
-  // Analytics button
-  const analyticsBtn = document.getElementById('analyticsBtn');
-  if (analyticsBtn) {
-    analyticsBtn.addEventListener('click', () => {
-      const report = processChatInput('show productivity report');
-      addBotMessage(report);
-      
-      // Show analytics panel
-      const analyticsPanel = document.getElementById('analyticsPanel');
-      if (analyticsPanel) {
-        analyticsPanel.style.display = 'block';
-        
-        // Scroll to analytics panel
-        analyticsPanel.scrollIntoView({ behavior: 'smooth' });
-        
-        // Generate simple charts
-        generateSimpleCharts();
-      }
-    });
+  // Import Notion tasks button
+  if (elements.importNotionBtn) {
+    elements.importNotionBtn.addEventListener('click', fetchNotionTasks);
   }
   
-  // Close analytics button
-  const closeAnalyticsBtn = document.getElementById('closeAnalyticsBtn');
-  if (closeAnalyticsBtn) {
-    closeAnalyticsBtn.addEventListener('click', () => {
-      const analyticsPanel = document.getElementById('analyticsPanel');
-      if (analyticsPanel) {
-        analyticsPanel.style.display = 'none';
-      }
-    });
-  }
-  
-  // Notion import button
-  const notionBtn = document.getElementById('notionBtn');
-  if (notionBtn) {
-    notionBtn.addEventListener('click', () => {
-      addBotMessage("Connecting to Notion and importing tasks...");
-      fetchNotionTasks();
-    });
-  }
-  
-  // Theme toggle button
-  if (elements.themeToggleBtn) {
-    elements.themeToggleBtn.addEventListener('click', toggleTheme);
-    // Initialize theme based on system preference or saved preference
-    initTheme();
+  // Import Calendar events button
+  if (elements.importCalendarBtn) {
+    elements.importCalendarBtn.addEventListener('click', fetchCalendarEvents);
   }
   
   // Chat input enter key

@@ -64,7 +64,19 @@
                 <div class="tasks-section">
                     <div class="section-header">
                         <h2 class="section-title" id="sectionTitle">Today's Tasks</h2>
-                        <button class="toggle-view-btn" id="toggleViewBtn">View Tomorrow's Plan</button>
+                        <div class="header-actions">
+                            <button class="toggle-view-btn" id="toggleViewBtn">View Tomorrow's Plan</button>
+                            <div class="import-buttons">
+                                <button class="btn btn--secondary" id="importNotionBtn" title="Import tasks from Notion">
+                                    <i class="fas fa-cloud"></i>
+                                    Import Notion Tasks
+                                </button>
+                                <button class="btn btn--secondary" id="importCalendarBtn" title="Import events from Google Calendar">
+                                    <i class="fas fa-calendar"></i>
+                                    Import Calendar Events
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Progress Bar -->
@@ -78,22 +90,6 @@
                     <!-- Tasks List -->
                     <div class="tasks-list" id="tasksList">
                         <!-- Tasks will be populated by JavaScript -->
-                    </div>
-                </div>
-                
-                <!-- Analytics Visualization Panel -->
-                <div class="analytics-panel" id="analyticsPanel" style="display: none;">
-                    <div class="section-header">
-                        <h2 class="section-title">Productivity Insights</h2>
-                        <button class="btn btn--secondary" id="closeAnalyticsBtn" style="margin-left: auto;">Close</button>
-                    </div>
-                    <div class="analytics-content">
-                        <div class="chart-container">
-                            <canvas id="completionChart" width="400" height="200"></canvas>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="priorityChart" width="400" height="200"></canvas>
-                        </div>
                     </div>
                 </div>
                 
